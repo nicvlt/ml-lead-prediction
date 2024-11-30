@@ -57,7 +57,7 @@ def check_feature_value(
     if expected_values is not None and value not in expected_values:
         raise ValueError(
             f"Unexpected value '{value}' for feature '{feature}'. "
-            f"Expected one of: {', '.join(expected_values)}"
+            f"Expected one of: {', '.join(map(str, expected_values))}"
         )
 
 
