@@ -12,6 +12,7 @@ def home():
     """Home route"""
     return WELCOME_MESSAGE
 
+@bp.route('/registrazione', methods=['GET', 'POST'])
 
 @bp.route("/predict", methods=["POST"])
 def predict_route():
