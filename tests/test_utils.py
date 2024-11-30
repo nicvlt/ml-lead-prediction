@@ -1,5 +1,6 @@
 import pytest
 import joblib
+import pandas as pd
 
 from unittest.mock import MagicMock, patch
 
@@ -73,6 +74,7 @@ def test_load_artifact_invalid_filepath(mock_joblib_load):
 
 # CHECK_FEATURE_VALUE TESTS
 def test_check_feature_value_str_valid():
+    """Test for categorical features: normal behavior"""
     feature = "Lead Origin"
     value = "API"
     type = "str"
@@ -81,6 +83,7 @@ def test_check_feature_value_str_valid():
 
 
 def test_check_feature_value_str_invalid():
+    """Test for categorical features: does it accept invalid values for categorical features?"""
     feature = "Lead Origin"
     value = "Invalid Origin"
     type = "str"
@@ -168,6 +171,7 @@ def test_check_feature_value_cast_float_invalid():
 
 
 def test_check_feature_value_none_value():
+    """Test for missing value parameter: normal behavior (we can call the function with None as value but that will raise an error)"""
     feature = "Lead Source"
     value = None
     type = "str"
@@ -186,8 +190,113 @@ def test_check_feature_value_none_value():
 
 
 def test_check_feature_value_none_expected_values_valid():
+    """Test for missing expected values parameter: normal behavior (some features don't have expected values)"""
     feature = "Total Time Spent on Website"
     value = "30"
     type = "int"
     expected_values = None
     check_feature_value(feature, value, type, expected_values)
+
+
+# EXTRACT_FEATURES TESTS
+def test_extract_features_valid_data():
+    """Test for normal behavior"""
+    data = {
+        "Lead Origin": "API",
+        "Lead Source": "Google",
+        "Do Not Email": 1,
+        "TotalVisits": 15.5,
+        "Total Time Spent on Website": 120,
+        "Last Activity": "Email Opened",
+        "Through Recommendations": 1,
+        "A free copy of Mastering The Interview": 0,
+        "Last Notable Activity": "Email Opened",
+    }
+    df = extract_features(data)
+    assert isinstance(df, pd.DataFrame), "Expected output to be a pandas DataFrame."
+    assert df.shape == (1, 9), "Expected DataFrame to have 1 row and 9 columns."
+    assert list(df.columns) == [
+        "Lead Origin",
+        "Lead Source",
+        "Do Not Email",
+        "TotalVisits",
+        "Total Time Spent on Website",
+        "Last Activity",
+        "Through Recommendations",
+        "A free copy of Mastering The Interview",
+        "Last Notable Activity",
+    ], "Expected columns to match the feature keys."
+
+
+def test_extract_features_unexpected_key():
+    """Test for unexpected key in data"""
+    data = {
+        "Lead Origin": "API",
+        "Lead Source": "Google",
+        "Do Not Email": 1,
+        "TotalVisits": 15.5,
+        "Total Time Spent on Website": 120,
+        "Last Activity": "Email Opened",
+        "Through Recommendations": 1,
+        "A free copy of Mastering The Interview": 0,
+        "Last Notable Activity": "Email Opened",
+        "Unexpected Key": "Invalid",
+    }
+    with pytest.raises(ValueError, match="Unknown features: Unexpected Key"):
+        extract_features(data)
+
+
+def test_extract_features_missing_key():
+    """Test for missing key in data"""
+    data = {
+        "Lead Origin": "API",
+        "Lead Source": "Google",
+        "Do Not Email": 1,
+        "TotalVisits": 15.5,
+        "Total Time Spent on Website": 120,
+        # "Last Activity" key is missing
+        "Through Recommendations": 1,
+        "A free copy of Mastering The Interview": 0,
+        "Last Notable Activity": "Email Opened",
+    }
+    with pytest.raises(ValueError, match="Missing value for feature 'Last Activity'"):
+        extract_features(data)
+
+
+def test_extract_features_invalid_value_type():
+    """Test for invalid value type for a feature"""
+    data = {
+        "Lead Origin": "API",
+        "Lead Source": "Google",
+        "Do Not Email": "string_instead_of_int",  # Invalid value type for 'Do Not Email'
+        "TotalVisits": 15.5,
+        "Total Time Spent on Website": 120,
+        "Last Activity": "Email Opened",
+        "Through Recommendations": 1,
+        "A free copy of Mastering The Interview": 0,
+        "Last Notable Activity": "Email Opened",
+    }
+    with pytest.raises(
+        ValueError,
+        match="Invalid value 'string_instead_of_int' for feature 'Do Not Email'. Expected an integer.",
+    ):
+        extract_features(data)
+
+
+def test_extract_features_none_value():
+    """Test for missing value for a feature"""
+    data = {
+        "Lead Origin": "API",
+        "Lead Source": "Google",
+        "Do Not Email": 1,
+        "TotalVisits": 15.5,
+        "Total Time Spent on Website": 120,
+        "Last Activity": "Email Opened",
+        "Through Recommendations": None,
+        "A free copy of Mastering The Interview": 0,
+        "Last Notable Activity": "Email Opened",
+    }
+    with pytest.raises(
+        ValueError, match="Missing value for feature 'Through Recommendations'"
+    ):
+        extract_features(data)
