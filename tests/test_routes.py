@@ -53,7 +53,7 @@ def test_predict_route_valid_not_converted(client):
 
     assert (
         response_json["status"] == 200
-    ), f"Expected status code 200, but got {response.get('status')}"
+    ), f"Expected status code 200, but got {response_json.get('status')}"
 
     assert (
         response_json == expected_response
