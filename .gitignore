@@ -1,2 +1,4 @@
 ml-intern-work-sample.pdf
 .venv
+__pycache__/
+*.pyc
