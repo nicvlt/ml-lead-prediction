@@ -1,5 +1,8 @@
 import pandas as pd
 import joblib
+
+from typing import Optional
+
 from sklearn.base import ClassifierMixin, TransformerMixin
 
 
@@ -16,15 +19,15 @@ def load_artifact(filepath: str) -> ClassifierMixin | TransformerMixin:
 
 
 def check_feature_value(
-    feature: str, value: str, type: str, expected_values: list
+    feature: str, value: Optional[str], type: str, expected_values: Optional[list]
 ) -> None:
     """Check if a feature contains an expected value.
 
     Args:
         feature (str): The feature name.
-        value (str): The feature value.
+        value Optional[str]: The feature value.
         type (str): The expected type.
-        expected_values (list): The expected values.
+        expected_values Optional[list]: The expected values.
 
     Raises:
         ValueError: If the feature contains an unexpected value.
@@ -127,9 +130,10 @@ def extract_features(data: dict) -> pd.DataFrame:
     }
     features = []
 
-    unexpected_keys = set(data.keys()) - set(expected_keys)
-    if unexpected_keys:
-        raise ValueError(f"Unexpected key(s): {', '.join(unexpected_keys)}")
+    list_of_keys = data.keys()
+    unknown_keys = [key for key in list_of_keys if key not in expected_keys]
+    if unknown_keys:
+        raise ValueError(f"Unknown features: {', '.join(unknown_keys)}")
 
     for key, (type, expected_values) in expected_keys.items():
         value = data.get(key)
